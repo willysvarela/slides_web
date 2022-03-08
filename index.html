@@ -1,0 +1,84 @@
+<html>
+<head>
+    <style>
+        * {
+            margin: 0
+        }
+        html {
+            height: 100%;
+            width: 100%;
+        }
+        .container {
+        }
+        .video {
+            width: 100%;
+        }
+        .subtitle-container {
+            position: absolute;
+            display: flex;
+            width: 100%;
+            height: 100%;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 60px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .subtitle-container span {
+            -webkit-text-stroke: 2px black;
+            text-transform: capitalize;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="subtitle-container">
+            <span id="subtitle">Teu amor não falha</span>
+        </div>
+        <video id="video" class="video" src="" autoplay loop></video>
+    </div>
+    <script>
+        let list; 
+        let index = 0;
+        let element = document.getElementById("subtitle");
+        
+        //the subtitle is a .txt file. the slides are separated by SEPARATOR property.
+        const SUBTITLE_URL = './subtitle_example.txt'; 
+        const VIDEO_URL = './video.mp4';
+        const SEPARATOR = '\n';
+        const NEXT_SLIDE_KEY = 's';
+        const PREVIOUS_SLIDE_KEY = 'a';
+
+        document.getElementById("video").src = VIDEO_URL;
+
+        const readFile = async () => {
+            const file = await fetch(SUBTITLE_URL).then( async res => {
+                return await res.text();
+            });
+            return file;
+        }
+
+        readFile().then(res => {
+            const splittedText = res.split(SEPARATOR);
+            list = splittedText;
+            updateSlide(0);
+        });
+
+        function updateSlide(value) {
+            const newIndex = index+value;
+            if(!!list[newIndex]) {
+                index = newIndex;
+                element.innerText = list[index];
+            }
+        }
+        document.addEventListener("keypress", function(e) {
+            
+            if(e.key.toLocaleLowerCase() === NEXT_SLIDE_KEY) {
+                updateSlide(1)
+            }if(e.key.toLocaleLowerCase() === PREVIOUS_SLIDE_KEY) {
+                updateSlide(-1)
+            }
+        });
+    </script>
+</body>
+</html>
