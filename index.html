@@ -1,8 +1,13 @@
 <html>
 <head>
     <style>
+        @font-face {
+            font-family: 'Staatliches-Regular';
+            src: url('./Staatliches-Regular.ttf');
+        }
         * {
-            margin: 0
+            margin: 0;
+            font-family: 'Staatliches-Regular', 'Sans-serif';
         }
         html {
             height: 100%;
@@ -11,6 +16,10 @@
         .container {
         }
         .video {
+            width: 100%;
+            height: 100%;
+        }
+        video {
             width: 100%;
         }
         .subtitle-container {
@@ -22,55 +31,97 @@
             align-items: center;
             text-align: center;
             color: white;
-            font-size: 60px;
+            font-size: 1em;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            
         }
-        .subtitle-container span {
+        .subtitle-container .subtitle {
             -webkit-text-stroke: 2px black;
             text-transform: capitalize;
+            padding-left: 10px;
+            padding-right: 10px;
+            font-size: 80px;
+        }
+        .title {
+            font-size: 1.8em;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="subtitle-container">
-            <span id="subtitle">Teu amor não falha</span>
+            <div id="subtitle" class="subtitle"></div>
         </div>
-        <video id="video" class="video" src="" autoplay loop></video>
+        <div id="video" class="video">
+            <video id="video" src="video3.mp4" muted autoplay loop></video>
+        </div>
     </div>
     <script>
-        let list; 
+        let list;
         let index = 0;
         let element = document.getElementById("subtitle");
         
         //the subtitle is a .txt file. the slides are separated by SEPARATOR property.
-        const SUBTITLE_URL = './subtitle_example.txt'; 
-        const VIDEO_URL = './video.mp4';
+        const SUBTITLE_URL = './subtitle.txt'; 
+        const VIDEO_URL = './video3.mp4';
         const SEPARATOR = ';';
         const NEXT_SLIDE_KEY = 's';
         const PREVIOUS_SLIDE_KEY = 'a';
 
-        document.getElementById("video").src = VIDEO_URL;
-
         const readFile = async () => {
             const file = await fetch(SUBTITLE_URL).then( async res => {
+                document.getElementById("video").src = VIDEO_URL;
                 return await res.text();
             });
             return file;
         }
 
+        function getURLParam() {
+            searchParams = new URLSearchParams(window.location.search);
+            const slideIndex = parseInt(searchParams.get("slide"));
+            console.log({slideIndex});
+            return slideIndex ? slideIndex : 0;
+        }
+
+        function formatTextFile(textFile) {
+            let textFormatted;
+            const splittedText = textFile.trim().split(SEPARATOR);
+            const removedSpace = splittedText.map(row => {
+                const removedLineBreak = row
+                    .replaceAll('\n', "<br/>")
+                    return removedLineBreak;
+            })
+            textFormatted = removedSpace;
+            return textFormatted;
+        }
         readFile().then(res => {
-            const splittedText = res.split(SEPARATOR);
-            list = splittedText;
-            updateSlide(0);
+            list = formatTextFile(res);
+            slideIndex = getURLParam();
+            updateSlide(slideIndex);
         });
 
         function updateSlide(value) {
             const newIndex = index+value;
             if(!!list[newIndex]) {
+                updateURL(newIndex);
                 index = newIndex;
-                element.innerText = list[index];
+                let lyricRow = list[index];
+                const isTitle = lyricRow.includes("#");
+                const type =  isTitle ? "title" : "lyric";
+                if (isTitle) {
+                    lyricRow = lyricRow.replaceAll("#", "");
+                    lyricRow = lyricRow.substring(0, lyricRow.length)
+                }
+                console.log({lyricRow});
+                element.innerHTML = `<span class="` + type + `">` + lyricRow + `</span>`;
             }
+        }
+
+        function updateURL(value) {
+            searchParams = new URLSearchParams(window.location.search);
+            searchParams.set("slide", value);
+            var newRelativePathQuery = window.location.pathname + '?' + searchParams.toString();
+            history.pushState(null, '', newRelativePathQuery);
         }
         document.addEventListener("keypress", function(e) {
             
